@@ -1,17 +1,19 @@
-# 📌 Stiknes – Wieloplatformowa Aplikacja Notatnikowa
-
-## 📝 Opis projektu
-**Stiknes** to nowoczesna aplikacja notatnikowa inspirowana **Notion**, zaprojektowana do płynnej pracy na trzech platformach:
-
-- 🌐 **Web** (Vue.js + Nest.js)
-- 🖥 **Desktop** (Python/Qt)
-- 📱 **Mobile** (Flutter)
-
-Celem projektu jest zapewnienie **wydajnej synchronizacji**, **czytelnego interfejsu** oraz **zaawansowanych funkcji organizacji treści**.
+### 📌 **Stiknes – Wieloplatformowa Aplikacja Notatnikowa**  
 
 ---
 
-## 🚀 Kluczowe funkcje
+## 📝 **Opis projektu**  
+**Stiknes** to nowoczesna aplikacja notatnikowa inspirowana Notion, zaprojektowana do płynnej pracy na trzech platformach:  
+
+🌐 **Web** (Vue.js + NestJS + Supabase)  
+🖥 **Desktop** (PyQt6 + Supabase)  
+📱 **Mobile** (Flutter + Supabase)  
+
+Celem projektu jest zapewnienie **wydajnej synchronizacji**, **intuicyjnego interfejsu** oraz **zaawansowanych funkcji organizacji treści**.
+
+---
+
+## 🚀 **Kluczowe funkcje**  
 ✅ **Tworzenie i edycja notatek** – obsługa tekstu, list, kodu, załączników  
 ✅ **Organizacja** – foldery, tagi, kolorowanie, priorytety  
 ✅ **Współpraca na żywo** – edycja w czasie rzeczywistym  
@@ -20,20 +22,22 @@ Celem projektu jest zapewnienie **wydajnej synchronizacji**, **czytelnego interf
 
 ---
 
-## 🏗 Technologie *przykładowo*
-| Platforma  | Stos technologiczny |
-|------------|---------------------|
-| **Web**    | Vue.js, Nest.js, PostgreSQL |
-| **Desktop** | Python, Qt, SQLite |
-| **Mobile** | Flutter, Firebase, Riverpod |
+## 🏗 **Technologie**  
+
+| **Platforma** | **Stos technologiczny** |
+|--------------|------------------------|
+| 🌐 **Web** | Vue.js, NestJS, Supabase |
+| 🖥 **Desktop** | PyQt6, Supabase |
+| 📱 **Mobile** | Flutter, Supabase |
 
 ---
 
-## 🎯 Struktura repozytorium
+## 🎯 **Struktura repozytorium**  
+
 ```
 /stiknes
-│── web/        # Kod aplikacji webowej (Vue + Nest.js)
-│── desktop/    # Kod aplikacji desktopowej (Python/Qt)
+│── web/        # Kod aplikacji webowej (Vue + NestJS)
+│── desktop/    # Kod aplikacji desktopowej (PyQt6)
 │── mobile/     # Kod aplikacji mobilnej (Flutter)
 │── docs/       # Dokumentacja projektu
 │── .gitignore  # Ignorowane pliki dla repozytorium Git
@@ -42,23 +46,23 @@ Celem projektu jest zapewnienie **wydajnej synchronizacji**, **czytelnego interf
 
 ---
 
-## 🛠 Instalacja i uruchomienie *przykładowo* 
+## 🛠 **Instalacja i uruchomienie**  
 
-### 🔹 Web
+🔹 **Web**  
 ```sh
 cd web
 npm install
 npm run dev
 ```
 
-### 🔹 Desktop
+🔹 **Desktop**  
 ```sh
 cd desktop
 pip install -r requirements.txt
 python main.py
 ```
 
-### 🔹 Mobile
+🔹 **Mobile**  
 ```sh
 cd mobile
 flutter pub get
@@ -67,6 +71,6 @@ flutter run
 
 ---
 
-## 💡 Autorzy
-👤 **Filip Buszewicz** 
+## 💡 **Autorzy**  
+👤 **Filip Buszewicz**  
 👤 **Kacper Czerwiński**  
