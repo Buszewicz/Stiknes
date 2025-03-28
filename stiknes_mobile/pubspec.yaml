@@ -10,11 +10,12 @@ environment:
   sdk: ^3.6.2
 
 dependencies:
+  supabase_flutter: ^2.0.0
+  flutter_dotenv: ^5.0.2
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  supabase_flutter: ^2.8.4
 
 dev_dependencies:
   flutter_test:
@@ -31,3 +32,4 @@ flutter:
   assets:
     # Add assets from the images directory to the application.
     - assets/images/
+    - .env
