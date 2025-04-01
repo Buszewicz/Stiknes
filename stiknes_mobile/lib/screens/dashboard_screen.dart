@@ -29,8 +29,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final response = await supabase
           .from('notes')
-          .select('id, title, content') // Pobieramy tylko potrzebne kolumny
-          .order('id', ascending: false); // Sortujemy według ID malejąco
+          .select('id, title, content')
+          .order('id', ascending: false);
 
       setState(() {
         notes = response;
@@ -46,12 +46,44 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _addNewNote() async {
+    try {
+      // Create a new empty note
+      final response = await supabase
+          .from('notes')
+          .insert({'title': 'New Note', 'content': ''})
+          .select()
+          .single();
+
+      // Navigate to edit screen for the new note
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditNoteScreen(noteId: response['id']),
+          ),
+        ).then((_) => _fetchNotes());
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error creating note: $error')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Dashboard')),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _addNewNote,
+        tooltip: 'Add Note',
+        child: const Icon(Icons.add),
+      ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator()) // Spinner w trakcie ładowania
+          ? const Center(child: CircularProgressIndicator())
           : notes.isEmpty
               ? const Center(child: Text('No notes found.'))
               : Padding(
@@ -61,14 +93,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     itemBuilder: (context, index) {
                       return ListTile(
                         title: Text(notes[index]['title']),
-                        subtitle: Text(notes[index]['content'], maxLines: 1, overflow: TextOverflow.ellipsis),
+                        subtitle: Text(
+                          notes[index]['content'],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditNoteScreen(noteId: notes[index]['id']),
+                              builder: (context) =>
+                                  EditNoteScreen(noteId: notes[index]['id']),
                             ),
-                          ).then((_) => _fetchNotes()); // Odśwież po edycji
+                          ).then((_) => _fetchNotes());
                         },
                       );
                     },
@@ -96,7 +133,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: const Text('User Info'),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => UserInfoScreen(username: widget.username)),
+                MaterialPageRoute(
+                    builder: (context) => UserInfoScreen(username: widget.username)),
               ),
             ),
             ListTile(
