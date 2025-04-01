@@ -48,14 +48,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _addNewNote() async {
     try {
-      // Create a new empty note
       final response = await supabase
           .from('notes')
           .insert({'title': 'New Note', 'content': ''})
           .select()
           .single();
 
-      // Navigate to edit screen for the new note
       if (mounted) {
         Navigator.push(
           context,
@@ -71,6 +69,50 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       }
     }
+  }
+
+  Future<void> _deleteNote(int noteId) async {
+    try {
+      await supabase.from('notes').delete().eq('id', noteId);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Note deleted successfully')),
+        );
+        _fetchNotes(); // Refresh the list after deletion
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error deleting note: $error')),
+        );
+      }
+    }
+  }
+
+  Future<void> _showDeleteDialog(int noteId) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Note'),
+          content: const Text('Are you sure you want to delete this note?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancel'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+              onPressed: () {
+                Navigator.of(context).pop();
+                _deleteNote(noteId);
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -91,22 +133,73 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: ListView.builder(
                     itemCount: notes.length,
                     itemBuilder: (context, index) {
-                      return ListTile(
-                        title: Text(notes[index]['title']),
-                        subtitle: Text(
-                          notes[index]['content'],
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  EditNoteScreen(noteId: notes[index]['id']),
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    EditNoteScreen(noteId: notes[index]['id']),
+                              ),
+                            ).then((_) => _fetchNotes());
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
                             ),
-                          ).then((_) => _fetchNotes());
-                        },
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          notes[index]['title'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          notes[index]['content'],
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color
+                                                ?.withOpacity(0.7),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _showDeleteDialog(notes[index]['id']),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       );
                     },
                   ),
