@@ -1,5 +1,7 @@
+// edit_note_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 
 class EditNoteScreen extends StatefulWidget {
   final int noteId;
@@ -15,6 +17,7 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   late TextEditingController _contentController;
   bool isLoading = true;
   bool isSaving = false;
+  bool isPreview = false;
 
   @override
   void initState() {
@@ -80,7 +83,7 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Note saved successfully!')),
         );
-        Navigator.pop(context, true); // Return true to indicate success
+        Navigator.pop(context, true);
       }
     } catch (e) {
       if (mounted) {
@@ -106,6 +109,12 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
               icon: const Icon(Icons.save),
               onPressed: isSaving ? null : _saveNote,
             ),
+          if (!isLoading)
+            IconButton(
+              icon: Icon(isPreview ? Icons.edit : Icons.preview),
+              onPressed: () => setState(() => isPreview = !isPreview),
+              tooltip: isPreview ? 'Edit mode' : 'Preview mode',
+            ),
         ],
       ),
       body: isLoading
@@ -127,17 +136,36 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 20),
-              TextField(
-                controller: _contentController,
-                maxLines: null, // Expands as needed
-                minLines: 10, // Minimum 10 lines
-                keyboardType: TextInputType.multiline,
-                decoration: const InputDecoration(
-                  labelText: 'Content',
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
+              if (!isPreview)
+                TextField(
+                  controller: _contentController,
+                  maxLines: null,
+                  minLines: 10,
+                  keyboardType: TextInputType.multiline,
+                  decoration: const InputDecoration(
+                    labelText: 'Content (Markdown supported)',
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                  ),
                 ),
-              ),
+              if (isPreview)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: MarkdownBody(
+                    data: _contentController.text,
+                    styleSheet: MarkdownStyleSheet(
+                      p: const TextStyle(fontSize: 16, height: 1.5),
+                      h1: Theme.of(context).textTheme.headlineLarge,
+                      h2: Theme.of(context).textTheme.headlineMedium,
+                      h3: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                  ),
+                ),
               const SizedBox(height: 20),
               SizedBox(
                 width: double.infinity,

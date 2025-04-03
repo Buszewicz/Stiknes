@@ -1,5 +1,7 @@
+// view_note_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'edit_note_screen.dart';
 
 class ViewNoteScreen extends StatefulWidget {
@@ -61,7 +63,7 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                 MaterialPageRoute(
                   builder: (context) => EditNoteScreen(noteId: widget.noteId),
                 ),
-              ).then((_) => _fetchNote()); // Refresh after editing
+              ).then((_) => _fetchNote());
             },
           ),
         ],
@@ -98,9 +100,14 @@ class _ViewNoteScreenState extends State<ViewNoteScreen> {
                   ),
                 ],
               ),
-              child: Text(
-                noteData!['content'] ?? '',
-                style: const TextStyle(fontSize: 16, height: 1.5),
+              child: MarkdownBody(
+                data: noteData!['content'] ?? '',
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(fontSize: 16, height: 1.5),
+                  h1: Theme.of(context).textTheme.headlineLarge,
+                  h2: Theme.of(context).textTheme.headlineMedium,
+                  h3: Theme.of(context).textTheme.headlineSmall,
+                ),
               ),
             ),
           ],
