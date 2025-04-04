@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/constants.dart';
 import 'edit_note_screen.dart';
 import 'settings_screen.dart';
 import 'user_info_screen.dart';
@@ -7,7 +8,8 @@ import 'login_screen.dart';
 import 'view_note_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int userId;
+  const DashboardScreen({super.key, required this.userId});
 
   @override
   DashboardScreenState createState() => DashboardScreenState();
@@ -16,43 +18,35 @@ class DashboardScreen extends StatefulWidget {
 class DashboardScreenState extends State<DashboardScreen> {
   List<Map<String, dynamic>> notes = [];
   bool isLoading = true;
+  String? username;
   final supabase = Supabase.instance.client;
-  String? _username;
 
   @override
   void initState() {
     super.initState();
-    _initializeData();
+    _fetchData();
   }
 
-  Future<void> _initializeData() async {
-    await _fetchUserData();
+  Future<void> _fetchData() async {
+    await _fetchUser();
     await _fetchNotes();
   }
 
-  Future<void> _fetchUserData() async {
+  Future<void> _fetchUser() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null || !mounted) {
-        _redirectToLogin();
-        return;
-      }
-
       final response = await supabase
-          .from('user')
+          .from(AppConstants.usersTable)
           .select('username')
-          .eq('id', user.id)
-          .maybeSingle();
+          .eq('id', widget.userId)
+          .single();
 
       if (mounted) {
-        setState(() {
-          _username = response?['username'];
-        });
+        setState(() => username = response['username']);
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error loading user data: $error')),
+          SnackBar(content: Text('Error loading user: $error')),
         );
       }
     }
@@ -60,16 +54,10 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _fetchNotes() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null || !mounted) {
-        _redirectToLogin();
-        return;
-      }
-
       final response = await supabase
-          .from('notes')
+          .from(AppConstants.notesTable)
           .select('id, title, content, created_at')
-          .eq('user_id', user.id)
+          .eq('user_id', widget.userId)
           .order('created_at', ascending: false);
 
       if (mounted) {
@@ -88,29 +76,14 @@ class DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _redirectToLogin() {
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginScreen()),
-      );
-    }
-  }
-
   Future<void> _addNewNote() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null || !mounted) {
-        _redirectToLogin();
-        return;
-      }
-
       final response = await supabase
-          .from('notes')
+          .from(AppConstants.notesTable)
           .insert({
             'title': 'New Note', 
             'content': '',
-            'user_id': user.id,
+            'user_id': widget.userId,
           })
           .select()
           .single();
@@ -134,7 +107,7 @@ class DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _deleteNote(int noteId) async {
     try {
-      await supabase.from('notes').delete().eq('id', noteId);
+      await supabase.from(AppConstants.notesTable).delete().eq('id', noteId);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Note deleted successfully')),
@@ -271,7 +244,7 @@ class DashboardScreenState extends State<DashboardScreen> {
             DrawerHeader(
               decoration: const BoxDecoration(color: Colors.blue),
               child: Text(
-                _username != null ? 'Welcome, $_username' : 'Welcome',
+                username != null ? 'Welcome, $username' : 'Welcome',
                 style: const TextStyle(color: Colors.white, fontSize: 20),
               ),
             ),
@@ -286,14 +259,18 @@ class DashboardScreenState extends State<DashboardScreen> {
               title: const Text('User Info'),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const UserInfoScreen()),
+                MaterialPageRoute(
+                  builder: (context) => UserInfoScreen(userId: widget.userId),
+                ),
               ),
             ),
             ListTile(
               title: const Text('Log Out'),
-              onTap: () async {
-                await supabase.auth.signOut();
-                _redirectToLogin();
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
               },
             ),
           ],

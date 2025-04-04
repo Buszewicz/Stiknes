@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login_screen.dart';
+import '../utils/constants.dart';
 
 class UserInfoScreen extends StatefulWidget {
-  const UserInfoScreen({super.key});
+  final int userId;
+  const UserInfoScreen({super.key, required this.userId});
 
   @override
   UserInfoScreenState createState() => UserInfoScreenState();
@@ -22,21 +23,10 @@ class UserInfoScreenState extends State<UserInfoScreen> {
 
   Future<void> _fetchUserData() async {
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
-        }
-        return;
-      }
-
       final response = await supabase
-          .from('user')
+          .from(AppConstants.usersTable)
           .select()
-          .eq('id', user.id)
+          .eq('id', widget.userId)
           .single();
 
       if (mounted) {

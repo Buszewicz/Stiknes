@@ -1,92 +1,115 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'register_screen.dart';
+import '../utils/constants.dart';
 import 'dashboard_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  LoginScreenState createState() => LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool isLoading = false;
-  final supabase = Supabase.instance.client;
+class _LoginScreenState extends State<LoginScreen> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
+  final _supabase = Supabase.instance.client;
 
   Future<void> _login() async {
-    setState(() => isLoading = true);
-    try {
-      final response = await supabase.auth.signInWithPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
-      );
+    if (!_formKey.currentState!.validate()) return;
 
-      if (response.user != null && mounted) {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _supabase
+          .from(AppConstants.usersTable)
+          .select()
+          .eq('email', _emailController.text.trim())
+          .maybeSingle();
+
+      if (response == null) {
+        throw Exception('User not found');
+      }
+
+      if (response['password'] != _passwordController.text.trim()) {
+        throw Exception('Invalid password');
+      }
+
+      if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          MaterialPageRoute(
+            builder: (context) => DashboardScreen(userId: response['id']),
+          ),
         );
       }
     } catch (error) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: $error')),
+          SnackBar(content: Text(error.toString())),
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _navigateToRegister() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => const RegisterScreen()),
-    );
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            TextField(
+      body: Form(
+        key: _formKey,
+        child: ListView(
+          padding: const EdgeInsets.all(20),
+          children: [
+            TextFormField(
               controller: _emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                border: OutlineInputBorder(),
-              ),
+              decoration: const InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                return null;
+              },
             ),
-            const SizedBox(height: 20),
-            TextField(
+            const SizedBox(height: 12),
+            TextFormField(
               controller: _passwordController,
+              decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                return null;
+              },
             ),
             const SizedBox(height: 20),
             ElevatedButton(
-              onPressed: isLoading ? null : _login,
-              child: isLoading
+              onPressed: _isLoading ? null : _login,
+              child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Login'),
             ),
-            const SizedBox(height: 20),
             TextButton(
-              onPressed: _navigateToRegister,
-              child: const Text('Don\'t have an account? Register'),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RegisterScreen()),
+                );
+              },
+              child: const Text('Create an account'),
             ),
           ],
         ),

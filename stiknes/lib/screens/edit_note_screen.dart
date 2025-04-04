@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
-import 'login_screen.dart';
+import '../utils/constants.dart';
 
 class EditNoteScreen extends StatefulWidget {
   final int noteId;
-
   const EditNoteScreen({super.key, required this.noteId});
 
   @override
@@ -31,7 +30,7 @@ class EditNoteScreenState extends State<EditNoteScreen> {
   Future<void> _fetchNote() async {
     try {
       final note = await supabase
-          .from('notes')
+          .from(AppConstants.notesTable)
           .select()
           .eq('id', widget.noteId)
           .single();
@@ -71,24 +70,12 @@ class EditNoteScreenState extends State<EditNoteScreen> {
     setState(() => isSaving = true);
 
     try {
-      final user = supabase.auth.currentUser;
-      if (user == null) {
-        if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
-        }
-        return;
-      }
-
       await supabase
-          .from('notes')
+          .from(AppConstants.notesTable)
           .update({
             'title': _titleController.text.trim(),
             'content': _contentController.text.trim(),
             'updated_at': DateTime.now().toIso8601String(),
-            'user_id': user.id,
           })
           .eq('id', widget.noteId);
 
