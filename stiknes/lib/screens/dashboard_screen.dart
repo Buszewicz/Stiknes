@@ -7,51 +7,111 @@ import 'login_screen.dart';
 import 'view_note_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
-  final String username;
-
-  const DashboardScreen({super.key, required this.username});
+  const DashboardScreen({super.key});
 
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
+  DashboardScreenState createState() => DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class DashboardScreenState extends State<DashboardScreen> {
   List<Map<String, dynamic>> notes = [];
   bool isLoading = true;
   final supabase = Supabase.instance.client;
+  String? _username;
 
   @override
   void initState() {
     super.initState();
-    _fetchNotes();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    await _fetchUserData();
+    await _fetchNotes();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null || !mounted) {
+        _redirectToLogin();
+        return;
+      }
+
+      final response = await supabase
+          .from('user')
+          .select('username')
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (mounted) {
+        setState(() {
+          _username = response?['username'];
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading user data: $error')),
+        );
+      }
+    }
   }
 
   Future<void> _fetchNotes() async {
     try {
+      final user = supabase.auth.currentUser;
+      if (user == null || !mounted) {
+        _redirectToLogin();
+        return;
+      }
+
       final response = await supabase
           .from('notes')
-          .select('id, title, content')
-          .order('id', ascending: false);
+          .select('id, title, content, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
 
-      setState(() {
-        notes = response;
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          notes = response;
+          isLoading = false;
+        });
+      }
     } catch (error) {
-      setState(() {
-        isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading notes: $error')),
+      if (mounted) {
+        setState(() => isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error loading notes: $error')),
+        );
+      }
+    }
+  }
+
+  void _redirectToLogin() {
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
       );
     }
   }
 
   Future<void> _addNewNote() async {
     try {
+      final user = supabase.auth.currentUser;
+      if (user == null || !mounted) {
+        _redirectToLogin();
+        return;
+      }
+
       final response = await supabase
           .from('notes')
-          .insert({'title': 'New Note', 'content': ''})
+          .insert({
+            'title': 'New Note', 
+            'content': '',
+            'user_id': user.id,
+          })
           .select()
           .single();
 
@@ -79,7 +139,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Note deleted successfully')),
         );
-        _fetchNotes(); // Refresh the list after deletion
+        _fetchNotes();
       }
     } catch (error) {
       if (mounted) {
@@ -128,83 +188,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : notes.isEmpty
-          ? const Center(child: Text('No notes found.'))
-          : Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView.builder(
-          itemCount: notes.length,
-          itemBuilder: (context, index) {
-            return MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          ViewNoteScreen(noteId: notes[index]['id']),
-                    ),
-                  ).then((_) => _fetchNotes());
-                },
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(8),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 1,
-                        blurRadius: 3,
-                        offset: const Offset(0, 1),
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                notes[index]['title'],
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                ),
+              ? const Center(child: Text('No notes found.'))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: ListView.builder(
+                    itemCount: notes.length,
+                    itemBuilder: (context, index) {
+                      return MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    ViewNoteScreen(noteId: notes[index]['id']),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                notes[index]['content'],
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.color
-                                      ?.withOpacity(0.7),
+                            ).then((_) => _fetchNotes());
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.grey.withOpacity(0.1),
+                                  spreadRadius: 1,
+                                  blurRadius: 3,
+                                  offset: const Offset(0, 1),
                                 ),
+                              ],
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          notes[index]['title'],
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          notes[index]['content'],
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            color: Theme.of(context)
+                                                .textTheme
+                                                .bodyMedium
+                                                ?.color,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () => _showDeleteDialog(notes[index]['id']),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
                           ),
                         ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _showDeleteDialog(notes[index]['id']),
-                        ),
-                      ],
-                    ),
+                      );
+                    },
                   ),
                 ),
-              ),
-            );
-          },
-        ),
-      ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -212,7 +271,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             DrawerHeader(
               decoration: const BoxDecoration(color: Colors.blue),
               child: Text(
-                'Welcome, ${widget.username}',
+                _username != null ? 'Welcome, $_username' : 'Welcome',
                 style: const TextStyle(color: Colors.white, fontSize: 20),
               ),
             ),
@@ -227,16 +286,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
               title: const Text('User Info'),
               onTap: () => Navigator.push(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => UserInfoScreen(username: widget.username)),
+                MaterialPageRoute(builder: (context) => const UserInfoScreen()),
               ),
             ),
             ListTile(
               title: const Text('Log Out'),
-              onTap: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              ),
+              onTap: () async {
+                await supabase.auth.signOut();
+                _redirectToLogin();
+              },
             ),
           ],
         ),

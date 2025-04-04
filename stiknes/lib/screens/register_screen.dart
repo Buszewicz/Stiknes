@@ -1,20 +1,21 @@
-// register_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'login_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  _RegisterScreenState createState() => _RegisterScreenState();
+  RegisterScreenState createState() => RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
   bool isLoading = false;
+  final supabase = Supabase.instance.client;
 
   Future<void> _register() async {
     if (_passwordController.text != _confirmPasswordController.text) {
@@ -26,24 +27,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => isLoading = true);
     try {
-      final authResponse = await Supabase.instance.client.auth.signUp(
+      final authResponse = await supabase.auth.signUp(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
       if (authResponse.user != null) {
-        await Supabase.instance.client.from('user').insert({
+        await supabase.from('user').insert({
           'id': authResponse.user!.id,
           'email': _emailController.text.trim(),
           'username': _usernameController.text.trim(),
-          'password': _passwordController.text.trim(), // Note: In production, never store plain passwords
         });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Registration Successful')),
           );
-          Navigator.pop(context);
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const LoginScreen()),
+          );
         }
       }
     } catch (error) {
