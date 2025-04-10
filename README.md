@@ -17,9 +17,9 @@ Simple and fast note management with **Markdown** formatting and access from any
 - Supabase  
 
 ### Web  
-- NestJS  
+- Express.js 
 - Vue.js  
-- Supabase  
+- PHPmyAdmin
 
 ## Installation  
 
