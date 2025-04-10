@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import '../utils/constants.dart';
 import 'dashboard_screen.dart';
 import 'register_screen.dart';
@@ -18,6 +20,10 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
 
+  String _hashPassword(String password) {
+    return sha256.convert(utf8.encode(password)).toString();
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
@@ -33,7 +39,8 @@ class _LoginScreenState extends State<LoginScreen> {
         throw Exception('User not found');
       }
 
-      if (response['password'] != _passwordController.text.trim()) {
+      final hashedPassword = _hashPassword(_passwordController.text.trim());
+      if (response['password'] != hashedPassword) {
         throw Exception('Invalid password');
       }
 
