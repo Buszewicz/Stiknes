@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 import '../utils/constants.dart';
 import 'login_screen.dart';
 
@@ -18,6 +20,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
+
+  String _hashPassword(String password) {
+    return sha256.convert(utf8.encode(password)).toString();
+  }
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -42,12 +48,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         throw Exception('Email already registered');
       }
 
+      final hashedPassword = _hashPassword(_passwordController.text.trim());
       final response = await _supabase
           .from(AppConstants.usersTable)
           .insert({
             'email': _emailController.text.trim(),
             'username': _usernameController.text.trim(),
-            'password': _passwordController.text.trim(),
+            'password': hashedPassword,
           })
           .select()
           .single();
