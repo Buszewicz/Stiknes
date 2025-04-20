@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../theme_notifier.dart'; // <- import
+import 'package:provider/provider.dart';
+import '../theme_notifier.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  _SettingsScreenState createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
@@ -32,8 +33,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _darkMode = value;
     });
 
-    // Przełącz motyw w całej aplikacji!
-    ThemeProvider.of(context).toggleTheme();
+    // Przełącz motyw
+    Provider.of<ThemeNotifier>(context, listen: false).toggleTheme();
   }
 
   @override

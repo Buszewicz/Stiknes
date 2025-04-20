@@ -1,24 +1,58 @@
 import 'package:flutter/material.dart';
 
-class ThemeProvider extends InheritedWidget {
-  final ThemeData themeData;
-  final void Function() toggleTheme;
+class ThemeNotifier with ChangeNotifier {
+  ThemeData _themeData;
+  bool _isDarkMode;
 
-  const ThemeProvider({
-    Key? key,
-    required this.themeData,
-    required this.toggleTheme,
-    required Widget child,
-  }) : super(key: key, child: child);
+  ThemeNotifier(this._themeData, this._isDarkMode);
 
-  static ThemeProvider of(BuildContext context) {
-    final ThemeProvider? result = context.dependOnInheritedWidgetOfExactType<ThemeProvider>();
-    assert(result != null, 'No ThemeProvider found in context');
-    return result!;
+  ThemeData getTheme() => _themeData;
+  bool isDarkMode() => _isDarkMode;
+
+  static ThemeData get lightTheme => _lightTheme;
+  static ThemeData get darkTheme => _darkTheme;
+
+  void toggleTheme() {
+    _isDarkMode = !_isDarkMode;
+    _themeData = _isDarkMode ? darkTheme : lightTheme;
+    notifyListeners();
   }
 
-  @override
-  bool updateShouldNotify(ThemeProvider oldWidget) {
-    return oldWidget.themeData != themeData;
-  }
+  static final ThemeData _lightTheme = ThemeData(
+    brightness: Brightness.light,
+    primarySwatch: Colors.blue,
+    cardColor: Colors.white,
+    scaffoldBackgroundColor: Colors.grey[100],
+    appBarTheme: const AppBarTheme(
+      color: Colors.blue,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: Colors.blue,
+    ),
+    dividerColor: Colors.grey,
+  );
+
+  static final ThemeData _darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.blueGrey,
+    cardColor: Colors.grey[900],
+    scaffoldBackgroundColor: Colors.grey[850],
+    appBarTheme: const AppBarTheme(
+      color: Colors.black,
+      titleTextStyle: TextStyle(
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+    floatingActionButtonTheme: FloatingActionButtonThemeData(
+      backgroundColor: Colors.blueGrey[700],
+    ),
+    dividerColor: Colors.grey[700],
+  );
 }

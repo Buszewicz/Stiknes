@@ -1,23 +1,23 @@
-// edit_note_screen.dart
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import '../utils/constants.dart';
 
 class EditNoteScreen extends StatefulWidget {
   final int noteId;
-
   const EditNoteScreen({super.key, required this.noteId});
 
   @override
-  _EditNoteScreenState createState() => _EditNoteScreenState();
+  EditNoteScreenState createState() => EditNoteScreenState();
 }
 
-class _EditNoteScreenState extends State<EditNoteScreen> {
+class EditNoteScreenState extends State<EditNoteScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   bool isLoading = true;
   bool isSaving = false;
   bool isPreview = false;
+  final supabase = Supabase.instance.client;
 
   @override
   void initState() {
@@ -29,8 +29,8 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
 
   Future<void> _fetchNote() async {
     try {
-      final note = await Supabase.instance.client
-          .from('notes')
+      final note = await supabase
+          .from(AppConstants.notesTable)
           .select()
           .eq('id', widget.noteId)
           .single();
@@ -70,13 +70,13 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
     setState(() => isSaving = true);
 
     try {
-      await Supabase.instance.client
-          .from('notes')
+      await supabase
+          .from(AppConstants.notesTable)
           .update({
-        'title': _titleController.text.trim(),
-        'content': _contentController.text.trim(),
-        'updated_at': DateTime.now().toIso8601String(),
-      })
+            'title': _titleController.text.trim(),
+            'content': _contentController.text.trim(),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
           .eq('id', widget.noteId);
 
       if (mounted) {
@@ -120,74 +120,74 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
           : GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: _titleController,
-                decoration: const InputDecoration(
-                  labelText: 'Title',
-                  border: OutlineInputBorder(),
-                ),
-                style: Theme.of(context).textTheme.titleLarge,
-                maxLines: 1,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 20),
-              if (!isPreview)
-                TextField(
-                  controller: _contentController,
-                  maxLines: null,
-                  minLines: 10,
-                  keyboardType: TextInputType.multiline,
-                  decoration: const InputDecoration(
-                    labelText: 'Content (Markdown supported)',
-                    alignLabelWithHint: true,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              if (isPreview)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: MarkdownBody(
-                    data: _contentController.text,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 16, height: 1.5),
-                      h1: Theme.of(context).textTheme.headlineLarge,
-                      h2: Theme.of(context).textTheme.headlineMedium,
-                      h3: Theme.of(context).textTheme.headlineSmall,
+              onTap: () => FocusScope.of(context).unfocus(),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: const InputDecoration(
+                        labelText: 'Title',
+                        border: OutlineInputBorder(),
+                      ),
+                      style: Theme.of(context).textTheme.titleLarge,
+                      maxLines: 1,
+                      textInputAction: TextInputAction.next,
                     ),
-                  ),
-                ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: isSaving
-                      ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
+                    const SizedBox(height: 20),
+                    if (!isPreview)
+                      TextField(
+                        controller: _contentController,
+                        maxLines: null,
+                        minLines: 10,
+                        keyboardType: TextInputType.multiline,
+                        decoration: const InputDecoration(
+                          labelText: 'Content (Markdown supported)',
+                          alignLabelWithHint: true,
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    if (isPreview)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: MarkdownBody(
+                          data: _contentController.text,
+                          styleSheet: MarkdownStyleSheet(
+                            p: const TextStyle(fontSize: 16, height: 1.5),
+                            h1: Theme.of(context).textTheme.headlineLarge,
+                            h2: Theme.of(context).textTheme.headlineMedium,
+                            h3: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon: isSaving
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.save),
+                        label: Text(isSaving ? 'Saving...' : 'Save'),
+                        onPressed: isSaving ? null : _saveNote,
+                      ),
                     ),
-                  )
-                      : const Icon(Icons.save),
-                  label: Text(isSaving ? 'Saving...' : 'Save'),
-                  onPressed: isSaving ? null : _saveNote,
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
   }
 }

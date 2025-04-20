@@ -1,76 +1,64 @@
-### 📌 **Stiknes – Wieloplatformowa Aplikacja Notatnikowa**  
+# Stiknes  
 
----
+**Cloud-based note-taking app with Markdown support**  
 
-## 📝 **Opis projektu**  
-**Stiknes** to nowoczesna aplikacja notatnikowa inspirowana Notion, zaprojektowana do płynnej pracy na trzech platformach:  
+Simple and fast note management with **Markdown** formatting and access from any device.  
 
-🌐 **Web** (Vue.js + NestJS + Supabase)  
-🖥 **Desktop** (PyQt6 + Supabase)  
-📱 **Mobile** (Flutter + Supabase)  
+## Features  
+- Dark mode / Light mode  
+- **Markdown** editing (headings, lists, code, *emphasis*, etc.)  
+- Cloud synchronization (Supabase)  
+- Responsive design (works on desktop and mobile)  
 
-Celem projektu jest zapewnienie **wydajnej synchronizacji**, **intuicyjnego interfejsu** oraz **zaawansowanych funkcji organizacji treści**.
+## Tech Stack  
 
----
+### Desktop / Mobile  
+- Flutter  
+- Supabase  
 
-## 🚀 **Kluczowe funkcje**  
-✅ **Tworzenie i edycja notatek** – obsługa tekstu, list, kodu, załączników  
-✅ **Organizacja** – foldery, tagi, kolorowanie, priorytety  
-✅ **Współpraca na żywo** – edycja w czasie rzeczywistym  
-✅ **Wsparcie dla różnych formatów** – checklisty, kod, obrazy  
-✅ **Synchronizacja danych** – przechowywanie i dostęp z wielu urządzeń  
+### Web  
+- Express.js 
+- Vue.js  
+- PHPmyAdmin
 
----
+## Installation  
 
-## 🏗 **Technologie**  
+### Mobile / Desktop  
+1. Install **Flutter**  
+2. Create a database project in **Supabase**  
+3. Add API key and API URL to the `.env` file  
+4. Install dependencies with:  
+   ```sh
+   flutter pub get
+   ```  
 
-| **Platforma** | **Stos technologiczny** |
-|--------------|------------------------|
-| 🌐 **Web** | Vue.js, NestJS, Supabase |
-| 🖥 **Desktop** | PyQt6, Supabase |
-| 📱 **Mobile** | Flutter, Supabase |
+## Database Structure  
 
----
-
-## 🎯 **Struktura repozytorium**  
-
-```
-/stiknes
-│── web/        # Kod aplikacji webowej (Vue + NestJS)
-│── desktop/    # Kod aplikacji desktopowej (PyQt6)
-│── mobile/     # Kod aplikacji mobilnej (Flutter)
-│── docs/       # Dokumentacja projektu
-│── .gitignore  # Ignorowane pliki dla repozytorium Git
-│── README.md   # Plik README
-```
-
----
-
-## 🛠 **Instalacja i uruchomienie**  
-
-🔹 **Web**  
-```sh
-cd web
-npm install
-npm run dev
+### `users` Table
+```sql
+CREATE TABLE users (
+  id BIGSERIAL PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  username TEXT,
+  password TEXT,  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NULL
+);
 ```
 
-🔹 **Desktop**  
-```sh
-cd desktop
-pip install -r requirements.txt
-python main.py
+### `notes` Table
+```sql
+CREATE TABLE notes (
+  id SERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  content TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NULL
+);
 ```
 
-🔹 **Mobile**  
-```sh
-cd mobile
-flutter pub get
-flutter run
-```
+## Authors  
+- Filip Buszewicz  
+- Kacper Czerwiński  
 
----
-
-## 💡 **Autorzy**  
-👤 **Filip Buszewicz**  
-👤 **Kacper Czerwiński**  
