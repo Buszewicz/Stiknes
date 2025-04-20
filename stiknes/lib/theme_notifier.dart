@@ -12,20 +12,10 @@ class ThemeNotifier with ChangeNotifier {
   static ThemeData get lightTheme => _lightTheme;
   static ThemeData get darkTheme => _darkTheme;
 
-  void setTheme(ThemeData themeData, bool isDarkMode) {
-    _themeData = themeData;
-    _isDarkMode = isDarkMode;
-    notifyListeners();
-  }
-
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     _themeData = _isDarkMode ? darkTheme : lightTheme;
     notifyListeners();
-  }
-
-  static ThemeNotifier? of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<ThemeProvider>()?.notifier;
   }
 
   static final ThemeData _lightTheme = ThemeData(
@@ -44,7 +34,7 @@ class ThemeNotifier with ChangeNotifier {
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: Colors.blue,
     ),
-    dividerColor: Colors.grey[300],
+    dividerColor: Colors.grey,
   );
 
   static final ThemeData _darkTheme = ThemeData(
@@ -52,9 +42,9 @@ class ThemeNotifier with ChangeNotifier {
     primarySwatch: Colors.blueGrey,
     cardColor: Colors.grey[900],
     scaffoldBackgroundColor: Colors.grey[850],
-    appBarTheme: AppBarTheme(
-      color: Colors.grey[900],
-      titleTextStyle: const TextStyle(
+    appBarTheme: const AppBarTheme(
+      color: Colors.black,
+      titleTextStyle: TextStyle(
         color: Colors.white,
         fontSize: 20,
         fontWeight: FontWeight.bold,
@@ -65,16 +55,4 @@ class ThemeNotifier with ChangeNotifier {
     ),
     dividerColor: Colors.grey[700],
   );
-}
-
-class ThemeProvider extends InheritedNotifier<ThemeNotifier> {
-  const ThemeProvider({
-    Key? key,
-    required ThemeNotifier notifier,
-    required Widget child,
-  }) : super(key: key, notifier: notifier, child: child);
-
-  static ThemeData of(BuildContext context) {
-    return context.dependOnInheritedWidgetOfExactType<ThemeProvider>()!.notifier!.getTheme();
-  }
 }

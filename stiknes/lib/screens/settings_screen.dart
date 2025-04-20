@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../theme_notifier.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  SettingsScreenState createState() => SettingsScreenState();
+  State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
-class SettingsScreenState extends State<SettingsScreen> {
+class _SettingsScreenState extends State<SettingsScreen> {
   bool _darkMode = false;
 
   @override
@@ -31,6 +32,9 @@ class SettingsScreenState extends State<SettingsScreen> {
     setState(() {
       _darkMode = value;
     });
+
+    // Przełącz motyw
+    Provider.of<ThemeNotifier>(context, listen: false).toggleTheme();
   }
 
   @override
@@ -43,11 +47,7 @@ class SettingsScreenState extends State<SettingsScreen> {
           SwitchListTile(
             title: const Text('Dark Mode'),
             value: _darkMode,
-            onChanged: (bool value) {
-              _toggleDarkMode(value);
-              final themeNotifier = ThemeNotifier.of(context);
-              themeNotifier?.toggleTheme();
-            },
+            onChanged: _toggleDarkMode,
           ),
           ListTile(
             title: const Text('Change Password'),
