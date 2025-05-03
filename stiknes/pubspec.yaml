@@ -17,6 +17,7 @@ dependencies:
   shared_preferences: ^2.2.2
   provider: ^6.0.5
   crypto: ^3.0.3
+  flutter_launcher_icons: ^0.14.3
 
 dev_dependencies:
   flutter_test:
@@ -32,3 +33,10 @@ flutter:
   assets:
     - assets/images/
     - .env
+    - assets/images/logo.png
+    - assets/images/logo_light.png
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/logo.png"

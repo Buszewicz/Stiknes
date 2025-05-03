@@ -72,6 +72,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final logoAsset = isDark
+        ? 'assets/images/logo_light.png'
+        : 'assets/images/logo.png';
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Form(
@@ -79,32 +84,34 @@ class _LoginScreenState extends State<LoginScreen> {
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
+            Center(
+              child: Image.asset(logoAsset, height: 120),
+            ),
+            const SizedBox(height: 32),
             TextFormField(
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
-                }
-                return null;
-              },
+              validator: (value) =>
+              value == null || value.isEmpty ? 'Please enter your email' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _passwordController,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
-                }
-                return null;
-              },
+              validator: (value) =>
+              value == null || value.isEmpty ? 'Please enter your password' : null,
             ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _isLoading ? null : _login,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
               child: _isLoading
                   ? const CircularProgressIndicator()
                   : const Text('Login'),
