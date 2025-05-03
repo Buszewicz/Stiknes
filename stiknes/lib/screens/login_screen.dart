@@ -16,7 +16,8 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _passwordFocus = FocusNode(); // 🔹 dodane
+  final _passwordFocusNode = FocusNode();
+
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   final _supabase = Supabase.instance.client;
@@ -36,11 +37,13 @@ class _LoginScreenState extends State<LoginScreen> {
           .eq('email', _emailController.text.trim())
           .maybeSingle();
 
-      if (response == null) throw Exception('User not found');
+      if (response == null) {
+        throw 'No account found for this email.';
+      }
 
       final hashedPassword = _hashPassword(_passwordController.text.trim());
       if (response['password'] != hashedPassword) {
-        throw Exception('Invalid password');
+        throw 'Incorrect password. Please try again.';
       }
 
       if (mounted) {
@@ -52,9 +55,10 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
     } catch (error) {
+      final errorMessage = error.toString().replaceFirst('Exception: ', '');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error.toString())),
+          SnackBar(content: Text(errorMessage)),
         );
       }
     } finally {
@@ -66,15 +70,16 @@ class _LoginScreenState extends State<LoginScreen> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
-    _passwordFocus.dispose(); // 🔹 pamiętaj o czyszczeniu
+    _passwordFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final logoAsset =
-    isDark ? 'assets/images/logo_light.png' : 'assets/images/logo.png';
+    final logoAsset = isDark
+        ? 'assets/images/logo_light.png'
+        : 'assets/images/logo.png';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
@@ -89,16 +94,16 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
               keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next, // 🔹 Enter przechodzi dalej
+              textInputAction: TextInputAction.next,
               onFieldSubmitted: (_) =>
-                  FocusScope.of(context).requestFocus(_passwordFocus),
+                  FocusScope.of(context).requestFocus(_passwordFocusNode),
               validator: (value) =>
               value == null || value.isEmpty ? 'Please enter your email' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _passwordController,
-              focusNode: _passwordFocus, // 🔹 przypisany FocusNode
+              focusNode: _passwordFocusNode,
               decoration: const InputDecoration(labelText: 'Password'),
               obscureText: true,
               textInputAction: TextInputAction.done,
