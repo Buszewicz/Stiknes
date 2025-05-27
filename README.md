@@ -18,11 +18,14 @@ Simple and fast note management with **Markdown** formatting and access from any
 
 ### Web  
 - Express.js 
-- Vue.js  
-- PHPmyAdmin
+- ?
+- Supabase
+- Prisma
 
 ## Installation  
-
+```
+git clone 
+```
 ### Mobile / Desktop  
 1. Install **Flutter**  
 2. Create a database project in **Supabase**  
@@ -31,13 +34,16 @@ Simple and fast note management with **Markdown** formatting and access from any
    ```sh
    flutter pub get
    ```  
-
+### Web
+1. Open backend
+2. Run command ```npm install```
+3. Run ```index.js```
 ## Database Structure  
 
 ### `users` Table
 ```sql
 CREATE TABLE users (
-  id BIGSERIAL PRIMARY KEY,
+  id BIGINT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
   username TEXT,
   password TEXT,  
@@ -57,6 +63,7 @@ CREATE TABLE notes (
   updated_at TIMESTAMPTZ DEFAULT NULL
 );
 ```
+![DB schema](https://github.com/Buszewicz/Stiknes/blob/main/DB.png)
 
 ## Authors  
 - Filip Buszewicz  
