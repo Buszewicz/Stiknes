@@ -58,7 +58,7 @@ CREATE TABLE public.user (
 CREATE TABLE public.notes (
   id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
-  user_id integer NOT NULL UNIQUE,
+  user_id integer NOT NULL,
   title text NOT NULL,
   content text,
   updated_at timestamp without time zone,
