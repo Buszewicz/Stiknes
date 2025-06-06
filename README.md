@@ -42,25 +42,28 @@ git clone
 
 ### `users` Table
 ```sql
-CREATE TABLE users (
-  id BIGINT PRIMARY KEY,
-  email TEXT UNIQUE NOT NULL,
-  username TEXT,
-  password TEXT,  
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NULL
+CREATE TABLE public.user (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  email text NOT NULL UNIQUE,
+  username text,
+  password text,
+  updated_at timestamp without time zone,
+  CONSTRAINT user_pkey PRIMARY KEY (id)
 );
 ```
 
 ### `notes` Table
 ```sql
-CREATE TABLE notes (
-  id SERIAL PRIMARY KEY,
-  user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  content TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NULL
+CREATE TABLE public.notes (
+  id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT now(),
+  user_id integer NOT NULL UNIQUE,
+  title text NOT NULL,
+  content text,
+  updated_at timestamp without time zone,
+  CONSTRAINT notes_pkey PRIMARY KEY (id),
+  CONSTRAINT notes_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user(id)
 );
 ```
 ![DB schema](https://github.com/Buszewicz/Stiknes/blob/main/DB.png)
