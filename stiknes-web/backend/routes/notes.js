@@ -5,24 +5,24 @@ const { PrismaClient } = require('@prisma/client');
 const router = express.Router();
 const prisma = new PrismaClient();
 
-// Validation middleware
+// === VALIDATORS ===
 const validateNote = [
     body('title').notEmpty().withMessage('Title is required'),
-    body('userId').isNumeric().withMessage('Valid user ID is required')
+    body('userId').isInt().withMessage('Valid user ID is required')
 ];
 
 const validateNoteUpdate = [
     body('title').optional().notEmpty().withMessage('Title cannot be empty'),
-    body('userId').optional().isNumeric().withMessage('Valid user ID is required')
+    body('userId').optional().isInt().withMessage('Valid user ID is required')
 ];
 
-// GET /api/notes - Get all notes
+// === GET ALL NOTES ===
 router.get('/', async (req, res) => {
     try {
         const { page = 1, limit = 10, userId } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        const where = userId ? { userId: BigInt(userId) } : {};
+        const where = userId ? { userId: parseInt(userId) } : {};
 
         const notes = await prisma.note.findMany({
             where,
@@ -42,18 +42,16 @@ router.get('/', async (req, res) => {
 
         const total = await prisma.note.count({ where });
 
-        // Convert BigInt to string
-        const serializedNotes = notes.map(note => ({
-            ...note,
-            userId: note.userId.toString(),
-            user: {
-                ...note.user,
-                id: note.user.id.toString()
-            }
-        }));
-
         res.json({
-            notes: serializedNotes,
+            notes: notes.map(note => ({
+                ...note,
+                id: note.id.toString(),
+                userId: note.userId.toString(),
+                user: {
+                    ...note.user,
+                    id: note.user.id.toString()
+                }
+            })),
             pagination: {
                 total,
                 page: parseInt(page),
@@ -62,17 +60,18 @@ router.get('/', async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('GET /notes error:', error);
         res.status(500).json({ error: 'Failed to fetch notes' });
     }
 });
 
-// GET /api/notes/:id - Get note by ID
+// === GET NOTE BY ID ===
 router.get('/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id);
 
         const note = await prisma.note.findUnique({
-            where: { id: parseInt(id) },
+            where: { id },
             include: {
                 user: {
                     select: {
@@ -88,23 +87,22 @@ router.get('/:id', async (req, res) => {
             return res.status(404).json({ error: 'Note not found' });
         }
 
-        // Convert BigInt to string
-        const serializedNote = {
+        res.json({
             ...note,
+            id: note.id.toString(),
             userId: note.userId.toString(),
             user: {
                 ...note.user,
                 id: note.user.id.toString()
             }
-        };
-
-        res.json(serializedNote);
+        });
     } catch (error) {
+        console.error('GET /notes/:id error:', error);
         res.status(500).json({ error: 'Failed to fetch note' });
     }
 });
 
-// POST /api/notes - Create new note
+// === CREATE NOTE ===
 router.post('/', validateNote, async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -113,12 +111,9 @@ router.post('/', validateNote, async (req, res) => {
         }
 
         const { title, content, userId } = req.body;
+        const userIdInt = parseInt(userId);
 
-        // Check if user exists
-        const userExists = await prisma.user.findUnique({
-            where: { id: BigInt(userId) }
-        });
-
+        const userExists = await prisma.user.findUnique({ where: { id: userIdInt } });
         if (!userExists) {
             return res.status(400).json({ error: 'User not found' });
         }
@@ -127,7 +122,7 @@ router.post('/', validateNote, async (req, res) => {
             data: {
                 title,
                 content,
-                userId: BigInt(userId)
+                userId: userIdInt
             },
             include: {
                 user: {
@@ -140,23 +135,22 @@ router.post('/', validateNote, async (req, res) => {
             }
         });
 
-        // Convert BigInt to string
-        const serializedNote = {
+        res.status(201).json({
             ...note,
+            id: note.id.toString(),
             userId: note.userId.toString(),
             user: {
                 ...note.user,
                 id: note.user.id.toString()
             }
-        };
-
-        res.status(201).json(serializedNote);
+        });
     } catch (error) {
+        console.error('POST /notes error:', error);
         res.status(500).json({ error: 'Failed to create note' });
     }
 });
 
-// PUT /api/notes/:id - Update note
+// === UPDATE NOTE ===
 router.put('/:id', validateNoteUpdate, async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -164,27 +158,24 @@ router.put('/:id', validateNoteUpdate, async (req, res) => {
             return res.status(400).json({ errors: errors.array() });
         }
 
-        const { id } = req.params;
+        const id = parseInt(req.params.id);
         const { title, content, userId } = req.body;
 
         const updateData = {};
         if (title !== undefined) updateData.title = title;
         if (content !== undefined) updateData.content = content;
-        if (userId !== undefined) {
-            // Check if user exists
-            const userExists = await prisma.user.findUnique({
-                where: { id: BigInt(userId) }
-            });
 
+        if (userId !== undefined) {
+            const userIdInt = parseInt(userId);
+            const userExists = await prisma.user.findUnique({ where: { id: userIdInt } });
             if (!userExists) {
                 return res.status(400).json({ error: 'User not found' });
             }
-
-            updateData.userId = BigInt(userId);
+            updateData.userId = userIdInt;
         }
 
         const note = await prisma.note.update({
-            where: { id: parseInt(id) },
+            where: { id },
             data: updateData,
             include: {
                 user: {
@@ -197,18 +188,17 @@ router.put('/:id', validateNoteUpdate, async (req, res) => {
             }
         });
 
-        // Convert BigInt to string
-        const serializedNote = {
+        res.json({
             ...note,
+            id: note.id.toString(),
             userId: note.userId.toString(),
             user: {
                 ...note.user,
                 id: note.user.id.toString()
             }
-        };
-
-        res.json(serializedNote);
+        });
     } catch (error) {
+        console.error('PUT /notes/:id error:', error);
         if (error.code === 'P2025') {
             return res.status(404).json({ error: 'Note not found' });
         }
@@ -216,17 +206,16 @@ router.put('/:id', validateNoteUpdate, async (req, res) => {
     }
 });
 
-// DELETE /api/notes/:id - Delete note
+// === DELETE NOTE ===
 router.delete('/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        const id = parseInt(req.params.id);
 
-        await prisma.note.delete({
-            where: { id: parseInt(id) }
-        });
+        await prisma.note.delete({ where: { id } });
 
         res.status(204).send();
     } catch (error) {
+        console.error('DELETE /notes/:id error:', error);
         if (error.code === 'P2025') {
             return res.status(404).json({ error: 'Note not found' });
         }
