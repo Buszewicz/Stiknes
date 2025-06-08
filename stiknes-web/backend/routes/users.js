@@ -27,7 +27,6 @@ router.get('/', async (req, res) => {
     try {
         const { page = 1, limit = 10 } = req.query;
         const skip = (parseInt(page) - 1) * parseInt(limit);
-
         const users = await prisma.user.findMany({
             skip,
             take: parseInt(limit),
@@ -36,7 +35,6 @@ router.get('/', async (req, res) => {
                 email: true,
                 username: true,
                 createdAt: true,
-                updatedAt: true,
                 _count: {
                     select: { notes: true }
                 }
@@ -46,10 +44,18 @@ router.get('/', async (req, res) => {
 
         const total = await prisma.user.count();
 
+        const sanitizedUsers = users.map(user => ({
+            ...user,
+            id: user.id.toString(),
+            _count: {
+                notes: Number(user._count.notes)
+            }
+        }));
+
         res.json({
-            users,
+            users: sanitizedUsers,
             pagination: {
-                total,
+                total: Number(total),
                 page: parseInt(page),
                 limit: parseInt(limit),
                 totalPages: Math.ceil(total / parseInt(limit))
